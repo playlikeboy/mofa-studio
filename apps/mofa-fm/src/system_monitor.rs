@@ -53,7 +53,7 @@ mod macos_gpu {
     /// GPU statistics from macOS IOKit
     #[derive(Debug, Default)]
     pub struct MacOSGpuStats {
-        pub gpu_utilization: Option<f64>,  // 0.0 - 1.0
+        pub gpu_utilization: Option<f64>, // 0.0 - 1.0
         pub vram_used_mb: Option<u64>,
         pub vram_total_mb: Option<u64>,
     }
@@ -90,7 +90,8 @@ mod macos_gpu {
                         // Extract memory stats for Apple Silicon (unified memory)
                         // "In use system memory" is GPU memory currently in use (bytes)
                         // "Alloc system memory" is total allocated for GPU (bytes)
-                        if let Some(used_bytes) = extract_dict_value(line, "In use system memory\"") {
+                        if let Some(used_bytes) = extract_dict_value(line, "In use system memory\"")
+                        {
                             stats.vram_used_mb = Some((used_bytes as u64) / (1024 * 1024));
                         }
                         if let Some(alloc_bytes) = extract_dict_value(line, "Alloc system memory") {
