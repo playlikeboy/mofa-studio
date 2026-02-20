@@ -56,7 +56,7 @@ impl AsrProcessManager {
         }
     }
 
-    fn spawn_engine(&mut self, engine: AsrEngineId) {
+    fn spawn_engine(&mut self, engine: AsrEngineId, env_vars: &std::collections::HashMap<String, String>) {
         // Kill existing process first
         self.kill_engine(engine);
 
@@ -72,12 +72,14 @@ impl AsrProcessManager {
             node_id
         );
 
-        match std::process::Command::new(&bin_path)
-            .arg("--name")
-            .arg(node_id)
-            .stdout(std::process::Stdio::inherit())
-            .stderr(std::process::Stdio::inherit())
-            .spawn()
+        let mut cmd = std::process::Command::new(&bin_path);
+        cmd.arg("--name")
+           .arg(node_id)
+           .envs(env_vars)
+           .stdout(std::process::Stdio::inherit())
+           .stderr(std::process::Stdio::inherit());
+
+        match cmd.spawn()
         {
             Ok(child) => {
                 log::info!(
@@ -165,7 +167,10 @@ pub enum DoraCommand {
     /// Force stop the dataflow immediately (0s grace period)
     ForceStopDataflow,
     /// Connect an ASR engine (spawn child process)
-    ConnectAsrEngine { engine: AsrEngineId },
+    ConnectAsrEngine { 
+        engine: AsrEngineId,
+        env_vars: std::collections::HashMap<String, String>,
+    },
     /// Disconnect an ASR engine (kill child process)
     DisconnectAsrEngine { engine: AsrEngineId },
     /// Start mic recording
@@ -297,8 +302,8 @@ impl DoraIntegration {
     }
 
     /// Connect an ASR engine (spawn child process)
-    pub fn connect_asr_engine(&self, engine: AsrEngineId) -> bool {
-        self.send_command(DoraCommand::ConnectAsrEngine { engine })
+    pub fn connect_asr_engine(&self, engine: AsrEngineId, env_vars: std::collections::HashMap<String, String>) -> bool {
+        self.send_command(DoraCommand::ConnectAsrEngine { engine, env_vars })
     }
 
     /// Disconnect an ASR engine (kill child process)
@@ -421,9 +426,9 @@ impl DoraIntegration {
                         let _ = event_tx.send(DoraEvent::DataflowStopped);
                     }
 
-                    DoraCommand::ConnectAsrEngine { engine } => {
+                    DoraCommand::ConnectAsrEngine { engine, env_vars } => {
                         log::info!("Connecting ASR engine: {:?}", engine);
-                        asr_processes.spawn_engine(engine);
+                        asr_processes.spawn_engine(engine, &env_vars);
                     }
 
                     DoraCommand::DisconnectAsrEngine { engine } => {
