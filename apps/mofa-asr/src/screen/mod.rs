@@ -10,6 +10,7 @@ mod log_panel;
 use makepad_widgets::*;
 use mofa_ui::{MofaHeroWidgetExt, MofaHeroAction, ConnectionStatus, AudioManager};
 use mofa_ui::{LedMeterWidgetExt, MicButtonWidgetExt, AecButtonWidgetExt};
+use mofa_settings::data::Preferences;
 use crate::dora_integration::{AsrEngineId, DoraIntegration, DoraEvent};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -493,7 +494,7 @@ impl MoFaASRScreen {
 
         self.init_dora(cx);
 
-        let mut env_vars = HashMap::new();
+        let mut env_vars = self.load_api_keys_from_preferences();
         env_vars.insert("MIN_AUDIO_DURATION".to_string(), self.settings.min_audio_duration.to_string());
         env_vars.insert("MAX_AUDIO_DURATION".to_string(), self.settings.max_audio_duration.to_string());
 
@@ -562,7 +563,8 @@ impl MoFaASRScreen {
 
         if let Some(ref dora) = self.dora_integration {
             if now_active {
-                dora.connect_asr_engine(engine);
+                let env_vars = self.load_api_keys_from_preferences();
+                dora.connect_asr_engine(engine, env_vars);
                 self.add_log(cx, &format!("[INFO] [App] Starting {:?} engine", engine));
             } else {
                 dora.disconnect_asr_engine(engine);
@@ -866,6 +868,38 @@ impl MoFaASRScreen {
         });
 
         self.view.redraw(cx);
+    }
+
+    /// Load API keys from preferences
+    pub(super) fn load_api_keys_from_preferences(&self) -> HashMap<String, String> {
+        let mut env_vars = HashMap::new();
+
+        let prefs = Preferences::load();
+
+        for provider in &prefs.providers {
+            if let Some(ref api_key) = provider.api_key {
+                if !api_key.is_empty() {
+                    let env_var_name = match provider.id.as_str() {
+                        "openai" => "OPENAI_API_KEY".to_string(),
+                        "deepseek" => "DEEPSEEK_API_KEY".to_string(),
+                        "alibaba_cloud" => "ALIBABA_CLOUD_API_KEY".to_string(),
+                        "nvidia" => "NVIDIA_API_KEY".to_string(),
+                        id => format!("{}_API_KEY", id.to_uppercase().replace('-', "_")),
+                    };
+                    env_vars.insert(env_var_name, api_key.clone());
+                }
+            }
+        }
+
+        if let Some(provider) = prefs.get_provider("alibaba_cloud") {
+            if let Some(ref api_key) = provider.api_key {
+                if !api_key.is_empty() {
+                    env_vars.insert("DASHSCOPE_API_KEY".to_string(), api_key.clone());
+                }
+            }
+        }
+
+        env_vars
     }
 }
 
