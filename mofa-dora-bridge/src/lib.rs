@@ -110,6 +110,8 @@ pub mod data;
 pub mod dispatcher;
 pub mod error;
 pub mod parser;
+pub mod remote_config;
+pub mod remote_dataflow;
 pub mod shared_state;
 
 // Widget-specific bridges
@@ -124,6 +126,7 @@ pub use error::{BridgeError, BridgeResult};
 pub use shared_state::{SharedDoraState, DoraStatus, ChatState, AudioState, DirtyVec, DirtyValue, MicState};
 pub use widgets::AecControlCommand;
 pub use parser::{DataflowParser, EnvRequirement, LogSource, ParsedDataflow, ParsedNode};
+pub use remote_config::RemoteConfig;
 
 /// Prefix for MoFA built-in dynamic nodes in dataflow YAML
 pub const MOFA_NODE_PREFIX: &str = "mofa-";
@@ -147,10 +150,8 @@ pub enum MofaNodeType {
     ChatOutput,
     /// ASR Paraformer engine - dynamic bridge for funasr-mlx
     AsrParaformer,
-    /// ASR SenseVoice engine - dynamic bridge for funasr-nano-mlx
-    AsrSenseVoice,
-    /// ASR StepAudio2 engine - dynamic bridge for step-audio2-mlx
-    AsrStepAudio2,
+    /// ASR Qwen3-ASR engine - dynamic bridge for qwen3-asr-mlx
+    AsrQwen3Asr,
 }
 
 impl MofaNodeType {
@@ -165,8 +166,7 @@ impl MofaNodeType {
             MofaNodeType::ParticipantPanel => "mofa-participant-panel",
             MofaNodeType::ChatOutput => "mofa-chat-output",
             MofaNodeType::AsrParaformer => "mofa-asr-paraformer",
-            MofaNodeType::AsrSenseVoice => "mofa-asr-sensevoice",
-            MofaNodeType::AsrStepAudio2 => "mofa-asr-stepaudio2",
+            MofaNodeType::AsrQwen3Asr => "mofa-asr-qwen3",
         }
     }
 
@@ -181,8 +181,7 @@ impl MofaNodeType {
             "mofa-participant-panel" => Some(MofaNodeType::ParticipantPanel),
             "mofa-chat-output" => Some(MofaNodeType::ChatOutput),
             "mofa-asr-paraformer" => Some(MofaNodeType::AsrParaformer),
-            "mofa-asr-sensevoice" => Some(MofaNodeType::AsrSenseVoice),
-            "mofa-asr-stepaudio2" => Some(MofaNodeType::AsrStepAudio2),
+            "mofa-asr-qwen3" => Some(MofaNodeType::AsrQwen3Asr),
             _ => None,
         }
     }
