@@ -626,7 +626,7 @@ impl AecInputBridge {
 
         // VAD state
         let mut vad_state = VadState::default();
-        let mut recording_active = false;
+        let mut recording_active = true;
         let mut using_aec = aec_enabled.load(Ordering::Acquire) && aec_available;
 
         // Log config on startup (matching Python behavior)
@@ -667,7 +667,6 @@ impl AecInputBridge {
             let _ = Self::send_log(&mut node, &node_id, "INFO", "🎙️ Recording started without AEC (regular mic)");
         }
         is_recording.store(true, Ordering::Release);
-        recording_active = true;
 
         // Update shared state
         if let Some(ref ss) = shared_state {
