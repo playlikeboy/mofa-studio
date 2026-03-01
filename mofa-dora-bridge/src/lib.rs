@@ -110,8 +110,6 @@ pub mod data;
 pub mod dispatcher;
 pub mod error;
 pub mod parser;
-pub mod remote_config;
-pub mod remote_dataflow;
 pub mod shared_state;
 
 // Widget-specific bridges
@@ -126,7 +124,6 @@ pub use error::{BridgeError, BridgeResult};
 pub use shared_state::{SharedDoraState, DoraStatus, ChatState, AudioState, DirtyVec, DirtyValue, MicState};
 pub use widgets::AecControlCommand;
 pub use parser::{DataflowParser, EnvRequirement, LogSource, ParsedDataflow, ParsedNode};
-pub use remote_config::RemoteConfig;
 
 /// Prefix for MoFA built-in dynamic nodes in dataflow YAML
 pub const MOFA_NODE_PREFIX: &str = "mofa-";
